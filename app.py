@@ -54,6 +54,14 @@ def substituir_texto(doc, dicionario_dados):
                                 if tag in paragrafo.text:
                                     paragrafo.text = paragrafo.text.replace(tag, str(valor))
 # ==========================================
+# Função ESPECÍFICA para buscar dentro de Caixas de Texto (Shapes)
+def substituir_em_shapes(doc, dicionario_dados):
+    for shape in doc.shapes:
+        if shape.has_text_frame:
+            for paragrafo in shape.text_frame.paragraphs:
+                for tag, valor in dicionario_dados.items():
+                    if tag in paragrafo.text:
+                        paragrafo.text = paragrafo.text.replace(tag, str(valor))
 # INTERFACE DO SITE
 # ==========================================
 st.set_page_config(page_title="Gerador de Propostas SENAI", page_icon="📄", layout="wide")

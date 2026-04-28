@@ -19,13 +19,12 @@ def gerar_datas():
 
 # Função que procura as TAGS no Word (nas linhas, tabelas e cabeçalhos)
 def substituir_texto(doc, dicionario_dados):
-    # 1. Substituir nos parágrafos normais (corpo do texto)
+    # 1. Substituir no corpo do texto (parágrafos e tabelas)
     for paragrafo in doc.paragraphs:
         for tag, valor in dicionario_dados.items():
             if tag in paragrafo.text:
                 paragrafo.text = paragrafo.text.replace(tag, str(valor))
                 
-    # 2. Substituir dentro das Tabelas (corpo do texto)
     for tabela in doc.tables:
         for linha in tabela.rows:
             for celula in linha.cells:
@@ -34,22 +33,26 @@ def substituir_texto(doc, dicionario_dados):
                         if tag in paragrafo.text:
                             paragrafo.text = paragrafo.text.replace(tag, str(valor))
 
-    # 3. NOVO: Substituir dentro dos Cabeçalhos (Headers)
+    # 2. Varredura completa em TODOS os tipos de cabeçalho
     for secao in doc.sections:
-        # Procura nos textos soltos do cabeçalho
-        for paragrafo in secao.header.paragraphs:
-            for tag, valor in dicionario_dados.items():
-                if tag in paragrafo.text:
-                    paragrafo.text = paragrafo.text.replace(tag, str(valor))
-        # Procura em tabelas que estejam dentro do cabeçalho
-        for tabela in secao.header.tables:
-            for linha in tabela.rows:
-                for celula in linha.cells:
-                    for paragrafo in celula.paragraphs:
-                        for tag, valor in dicionario_dados.items():
-                            if tag in paragrafo.text:
-                                paragrafo.text = paragrafo.text.replace(tag, str(valor))
-
+        # Lista todos os cabeçalhos possíveis (Principal, Primeira Página, Páginas Pares)
+        headers = [secao.header, secao.first_page_header, secao.even_page_header]
+        
+        for header in headers:
+            # Procura em parágrafos do cabeçalho
+            for paragrafo in header.paragraphs:
+                for tag, valor in dicionario_dados.items():
+                    if tag in paragrafo.text:
+                        paragrafo.text = paragrafo.text.replace(tag, str(valor))
+            
+            # Procura em tabelas dentro do cabeçalho
+            for tabela in header.tables:
+                for linha in tabela.rows:
+                    for celula in linha.cells:
+                        for paragrafo in celula.paragraphs:
+                            for tag, valor in dicionario_dados.items():
+                                if tag in paragrafo.text:
+                                    paragrafo.text = paragrafo.text.replace(tag, str(valor))
 # ==========================================
 # INTERFACE DO SITE
 # ==========================================

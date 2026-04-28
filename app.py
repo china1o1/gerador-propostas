@@ -16,14 +16,16 @@ def gerar_datas():
     return data_emissao, data_vigencia
 
 # Função que procura as TAGS no Word (nas linhas e nas tabelas)
+
+# Função que procura as TAGS no Word (nas linhas, tabelas e cabeçalhos)
 def substituir_texto(doc, dicionario_dados):
-    # 1. Substituir nos parágrafos normais
+    # 1. Substituir nos parágrafos normais (corpo do texto)
     for paragrafo in doc.paragraphs:
         for tag, valor in dicionario_dados.items():
             if tag in paragrafo.text:
                 paragrafo.text = paragrafo.text.replace(tag, str(valor))
                 
-    # 2. Substituir dentro das Tabelas
+    # 2. Substituir dentro das Tabelas (corpo do texto)
     for tabela in doc.tables:
         for linha in tabela.rows:
             for celula in linha.cells:
@@ -31,6 +33,22 @@ def substituir_texto(doc, dicionario_dados):
                     for tag, valor in dicionario_dados.items():
                         if tag in paragrafo.text:
                             paragrafo.text = paragrafo.text.replace(tag, str(valor))
+
+    # 3. NOVO: Substituir dentro dos Cabeçalhos (Headers)
+    for secao in doc.sections:
+        # Procura nos textos soltos do cabeçalho
+        for paragrafo in secao.header.paragraphs:
+            for tag, valor in dicionario_dados.items():
+                if tag in paragrafo.text:
+                    paragrafo.text = paragrafo.text.replace(tag, str(valor))
+        # Procura em tabelas que estejam dentro do cabeçalho
+        for tabela in secao.header.tables:
+            for linha in tabela.rows:
+                for celula in linha.cells:
+                    for paragrafo in celula.paragraphs:
+                        for tag, valor in dicionario_dados.items():
+                            if tag in paragrafo.text:
+                                paragrafo.text = paragrafo.text.replace(tag, str(valor))
 
 # ==========================================
 # INTERFACE DO SITE

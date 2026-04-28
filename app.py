@@ -73,12 +73,13 @@ st.subheader("1. Dados do Cliente")
 col1, col2 = st.columns(2)
 
 with col1:
-    numero_proposta = st.text_input("Número da Proposta (Ex: PRO-210/2026)")
     nome_empresa = st.text_input("Nome da Empresa Solicitante")
     cnpj = st.text_input("CNPJ")
+    categoria = st.selectbox("Categoria", ["INDUSTRIA", "COMUNIDADE"])
     endereco = st.text_input("Endereço de Execução")
 
 with col2:
+    contato_funcao = st.text_input("Contato/Função (Ex: João - Gerente)")
     telefone = st.text_input("Telefone de Contato")
     email = st.text_input("E-mail")
     num_pessoas = st.text_input("Nº de pessoas atendidas")
@@ -112,9 +113,10 @@ if st.button("Gerar Proposta 🚀"):
             
             # DICIONÁRIO COMPLETO COM TODOS OS CAMPOS DO SITE
             dados_para_trocar = {
-                "{{NUMERO_DA_PROPOSTA}}": numero_proposta,
                 "{{EMPRESA}}": nome_empresa,
                 "{{CNPJ}}": cnpj,
+                "{{CATEGORIA}}": categoria,
+                "{{CONTATO_FUNCAO}}": contato_funcao,
                 "{{ENDERECO}}": endereco,
                 "{{TELEFONE}}": telefone,
                 "{{EMAIL}}": email,

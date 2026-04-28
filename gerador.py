@@ -43,25 +43,26 @@ def automatizar_proposta():
     # Gerando as datas automaticamente
     data_emissao, data_vigencia = gerar_datas()
     
-    # Dicionário com os dados da NOVA proposta (Você só precisa alterar isso a cada proposta!)
-    dados_nova_proposta = {
-        "{{RESPONSAVEL}}": "ELITON GABRIEL SILVA CORDEIRO",
-        "{{EMPRESA}}": "Indústria Exemplo S.A.",
-        "{{CNPJ}}": "12.345.678/0001-99",
-        "{{EMAIL}}": "contato@industriaexemplo.com.br",
-        "{{TELEFONE}}": "81 9 9999-0000",
-        "{{NUM_PESSOAS}}": "15",
-        "{{ENDERECO}}": "Av. Principal, 1000 - Distrito Industrial",
-        "{{SERVICO}}": "Curso de Excel Avançado e Power BI",
-        "{{DESCRICAO}}": "Capacitar colaboradores na análise de dados e criação de dashboards gerenciais.",
-        "{{UNIDADE}}": "SENAI - Santo Amaro",
-        "{{VALOR_UN}}": "R$ 400,00",
-        "{{QTD}}": "15",
-        "{{VALOR_TOTAL}}": "R$ 6.000,00",
-        "{{DATA_EMISSAO}}": data_emissao,
-        "{{DATA_VIGENCIA}}": data_vigencia
-        "{{NUMERO_DA_PROPOSTA}}": "PRO-210/2026"
-    }
+    # DICIONÁRIO COMPLETO COM TODOS OS CAMPOS DO SITE
+            dados_para_trocar = {
+                "{{EMPRESA}}": nome_empresa,
+                "{{CNPJ}}": cnpj,
+                "{{CATEGORIA}}": categoria,
+                "{{CONTATO_FUNCAO}}": contato_funcao,
+                "{{ENDERECO}}": endereco,
+                "{{TELEFONE}}": telefone,
+                "{{EMAIL}}": email,
+                "{{NUM_PESSOAS}}": num_pessoas,
+                "{{SERVICO}}": servico,
+                "{{DESCRICAO}}": descricao,
+                "{{UNIDADE}}": unidade,
+                "{{QTD}}": qtd,
+                "{{VALOR_UN}}": valor_un,
+                "{{VALOR_TOTAL}}": valor_total,
+                "{{DATA_EMISSAO}}": data_emissao,
+                "{{DATA_VIGENCIA}}": data_vigencia,
+                "{{RESPONSAVEL}}": "ELITON GABRIEL SILVA CORDEIRO"
+            }
     
     # Roda a função de substituição
     substituir_texto(doc, dados_nova_proposta)

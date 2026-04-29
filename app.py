@@ -14,8 +14,18 @@ def gerar_datas():
     data_fim = hoje + timedelta(days=dias_aleatorios)
     data_vigencia = f"{data_emissao} - {data_fim.strftime('%d/%m/%Y')}"
     return data_emissao, data_vigencia
+# --- NOVAS FUNÇÕES PARA CALCULAR DINHEIRO ---
+def converter_para_numero(valor_str):
+    if not valor_str: return 0.0
+    texto_limpo = valor_str.replace("R$", "").replace(".", "").replace(",", ".").strip()
+    try:
+        return float(texto_limpo)
+    except:
+        return 0.0
 
-# Função que procura as TAGS no Word (nas linhas e nas tabelas)
+def formatar_moeda(valor_float):
+    return f"{valor_float:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+# --------------------------------------------
 
 # Função que procura as TAGS no Word (nas linhas, tabelas e cabeçalhos)
 def substituir_texto(doc, dicionario_dados):
@@ -83,24 +93,42 @@ with col2:
     telefone = st.text_input("Telefone de Contato")
     email = st.text_input("E-mail")
     num_pessoas = st.text_input("Nº de pessoas atendidas")
+    responsavel = st.text_input("Responsável pela Proposta", value="ELITON GABRIEL SILVA CORDEIRO")
 
 st.subheader("2. Dados do Serviço e Valores")
-col3, col4 = st.columns(2)
+# Pergunta quantos serviços a pessoa quer (de 1 a 10)
+num_servicos = st.number_input("Quantos serviços deseja adicionar à proposta?", min_value=1, max_value=10, value=1)
 
-with col3:
-    servico = st.text_input("Serviço (Ex: Curso de Excel Avançado e Power BI)")
-    descricao = st.text_area("Descrição do Serviço")
-    unidade = st.text_input("Unidade Executora (Ex: SENAI - Santo Amaro)")
+servicos_lista = []
+# Cria os campos na tela repetidas vezes com base no número escolhido
+for i in range(int(num_servicos)):
+    st.markdown(f"**🔹 Serviço {i+1}**")
+    col3, col4 = st.columns(2)
+    with col3:
+        s_nome = st.text_input(f"Serviço {i+1}", key=f"s_nome_{i}")
+        s_desc = st.text_area(f"Descrição do Serviço {i+1}", key=f"s_desc_{i}")
+        s_unid = st.text_input(f"Unidade Executora {i+1}", key=f"s_unid_{i}")
+    with col4:
+        s_qtd = st.text_input(f"Quantidade {i+1}", key=f"s_qtd_{i}")
+        # Pede apenas os números. O código vai adicionar o R$ depois.
+        s_val_un = st.text_input(f"Valor Unitário {i+1} (Ex: 400,00)", key=f"s_val_un_{i}")
+        s_val_tot = st.text_input(f"Valor Total {i+1} (Ex: 6.000,00)", key=f"s_val_tot_{i}")
 
-with col4:
-    qtd = st.text_input("Quantidade")
-    valor_un = st.text_input("Valor Unitário (Ex: R$ 400,00)")
-    valor_total = st.text_input("Valor Total (Ex: R$ 6.000,00)")
+    # Salva os dados desse serviço em uma lista
+    servicos_lista.append({
+        "nome": s_nome, "desc": s_desc, "unid": s_unid,
+        "qtd": s_qtd, "val_un": s_val_un, "val_tot": s_val_tot
+    })
+
+# --- CAMPO DO DESCONTO ---
+st.subheader("3. Resumo e Desconto")
+desconto_input = st.text_input("Valor do Desconto em Reais (Ex: 500,00) - Deixe em branco se não houver")
+# -------------------------
 
 st.write("---")
 
 # Botão principal
-if st.button("Gerar Proposta 🚀"):
+if st.button("Gerar Proposta"):
     if not nome_empresa:
         st.warning("⚠️ Por favor, preencha pelo menos o nome da empresa.")
     else:
@@ -111,7 +139,31 @@ if st.button("Gerar Proposta 🚀"):
             # Gera as datas
             data_emissao, data_vigencia = gerar_datas()
             
-            # DICIONÁRIO COMPLETO COM TODOS OS CAMPOS DO SITE
+            # ==========================================
+            # 1. A MÁQUINA DE CALCULAR (Soma e Subtração)
+            # ==========================================
+            soma_global = 0.0
+            
+            # O Python olha cada serviço preenchido e soma os valores totais
+            for serv in servicos_lista:
+                soma_global += converter_para_numero(serv["val_tot"])
+            
+            # Pega o desconto digitado. Se estiver vazio, a função transforma em 0.0
+            valor_desconto = converter_para_numero(desconto_input)
+            
+            # A SUBTRAÇÃO ACONTECE AQUI:
+            valor_final = soma_global - valor_desconto
+            
+            # ==========================================
+            # 2. TRANSFORMANDO DE VOLTA EM TEXTO PARA O WORD
+            # ==========================================
+            texto_global = f"R$ {formatar_moeda(soma_global)}"
+            texto_desconto = f"R$ {formatar_moeda(valor_desconto)}" if valor_desconto > 0 else "-"
+            texto_final = f"R$ {formatar_moeda(valor_final)}"
+
+            # ==========================================
+            # 3. O DICIONÁRIO BASE ATUALIZADO
+            # ==========================================
             dados_para_trocar = {
                 "{{EMPRESA}}": nome_empresa,
                 "{{CNPJ}}": cnpj,
@@ -121,16 +173,34 @@ if st.button("Gerar Proposta 🚀"):
                 "{{TELEFONE}}": telefone,
                 "{{EMAIL}}": email,
                 "{{NUM_PESSOAS}}": num_pessoas,
-                "{{SERVICO}}": servico,
-                "{{DESCRICAO}}": descricao,
-                "{{UNIDADE}}": unidade,
-                "{{QTD}}": qtd,
-                "{{VALOR_UN}}": valor_un,
-                "{{VALOR_TOTAL}}": valor_total,
                 "{{DATA_EMISSAO}}": data_emissao,
                 "{{DATA_VIGENCIA}}": data_vigencia,
-                "{{RESPONSAVEL}}": "ELITON GABRIEL SILVA CORDEIRO" # Mantive o seu nome fixo
+                "{{RESPONSAVEL}}": responsavel,
+                "{{VALOR_GLOBAL}}": texto_global,  # <-- Entra o valor somado
+                "{{DESCONTO}}": texto_desconto,    # <-- Entra o desconto
+                "{{VALOR_FINAL}}": texto_final     # <-- Entra o resultado da subtração
             }
+
+            # 2. Preenche os serviços dinamicamente (Varre do 1 ao 10)
+            for i in range(10):
+                idx = i + 1
+                if i < num_servicos:
+                    # Se o serviço foi preenchido no site, coloca na tag correspondente
+                    dados_para_trocar[f"{{{{SERVICO_{idx}}}}}"] = servicos_lista[i]["nome"]
+                    dados_para_trocar[f"{{{{DESCRICAO_{idx}}}}}"] = servicos_lista[i]["desc"]
+                    dados_para_trocar[f"{{{{UNIDADE_{idx}}}}}"] = servicos_lista[i]["unid"]
+                    dados_para_trocar[f"{{{{QTD_{idx}}}}}"] = servicos_lista[i]["qtd"]
+                    # Aqui o Python embute o "R$" direto no valor!
+                    dados_para_trocar[f"{{{{VALOR_UN_{idx}}}}}"] = f"R$ {servicos_lista[i]['val_un']}" if servicos_lista[i]['val_un'] else ""
+                    dados_para_trocar[f"{{{{VALOR_TOTAL_{idx}}}}}"] = f"R$ {servicos_lista[i]['val_tot']}" if servicos_lista[i]['val_tot'] else ""
+                else:
+                    # Se o serviço NÃO foi usado, apaga a tag para a linha do Word ficar em branco
+                    dados_para_trocar[f"{{{{SERVICO_{idx}}}}}"] = ""
+                    dados_para_trocar[f"{{{{DESCRICAO_{idx}}}}}"] = ""
+                    dados_para_trocar[f"{{{{UNIDADE_{idx}}}}}"] = ""
+                    dados_para_trocar[f"{{{{QTD_{idx}}}}}"] = ""
+                    dados_para_trocar[f"{{{{VALOR_UN_{idx}}}}}"] = ""
+                    dados_para_trocar[f"{{{{VALOR_TOTAL_{idx}}}}}"] = ""
             
             # Executa a varredura e substituição no documento
             substituir_texto(doc, dados_para_trocar)

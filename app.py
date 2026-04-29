@@ -26,6 +26,20 @@ def converter_para_numero(valor_str):
 def formatar_moeda(valor_float):
     return f"{valor_float:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 # --------------------------------------------
+# --- FUNÇÃO PARA DELETAR LINHAS DA TABELA ---
+def remover_linhas_extras(doc):
+    for tabela in doc.tables:
+        for row in tabela.rows:
+            deletar = False
+            for cell in row.cells:
+                if "DELETAR_LINHA" in cell.text:
+                    deletar = True
+                    break
+            if deletar:
+                tbl = row._tr.getparent()
+                if row._tr in tbl:
+                    tbl.remove(row._tr)
+# --------------------------------------------
 
 # Função que procura as TAGS no Word (nas linhas, tabelas e cabeçalhos)
 def substituir_texto(doc, dicionario_dados):
@@ -194,8 +208,8 @@ if st.button("Gerar Proposta"):
                     dados_para_trocar[f"{{{{VALOR_UN_{idx}}}}}"] = f"R$ {servicos_lista[i]['val_un']}" if servicos_lista[i]['val_un'] else ""
                     dados_para_trocar[f"{{{{VALOR_TOTAL_{idx}}}}}"] = f"R$ {servicos_lista[i]['val_tot']}" if servicos_lista[i]['val_tot'] else ""
                 else:
-                    # Se o serviço NÃO foi usado, apaga a tag para a linha do Word ficar em branco
-                    dados_para_trocar[f"{{{{SERVICO_{idx}}}}}"] = ""
+                    # Se o serviço NÃO foi usado, injetamos a senha para deletar a linha
+                    dados_para_trocar[f"{{{{SERVICO_{idx}}}}}"] = "DELETAR_LINHA"
                     dados_para_trocar[f"{{{{DESCRICAO_{idx}}}}}"] = ""
                     dados_para_trocar[f"{{{{UNIDADE_{idx}}}}}"] = ""
                     dados_para_trocar[f"{{{{QTD_{idx}}}}}"] = ""
@@ -204,6 +218,10 @@ if st.button("Gerar Proposta"):
             
             # Executa a varredura e substituição no documento
             substituir_texto(doc, dados_para_trocar)
+
+            # --- NOVO: ACIONA A DESTRUIÇÃO DAS LINHAS EXTRAS ---
+            remover_linhas_extras(doc)
+            # ---------------------------------------------------
             
             # Salva o documento pronto na "memória" do site para download
             arquivo_memoria = io.BytesIO()

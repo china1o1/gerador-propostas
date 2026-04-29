@@ -134,10 +134,11 @@ for i in range(int(num_servicos)):
         "qtd": s_qtd, "val_un": s_val_un, "val_tot": s_val_tot
     })
 
-# --- CAMPO DO DESCONTO ---
-st.subheader("3. Resumo e Desconto")
+# --- CAMPOS FINAIS (DESCONTO E DATAS) ---
+st.subheader("3. Resumo, Desconto e Vigência")
 desconto_input = st.text_input("Valor do Desconto em Reais (Ex: 500,00) - Deixe em branco se não houver")
-# -------------------------
+vigencia_input = st.text_input("Prazo de Execução / Vigência (Ex: 26/06/2026 - 31/12/2026)")
+# ----------------------------------------
 
 st.write("---")
 
@@ -150,8 +151,11 @@ if st.button("Gerar Proposta"):
             # Carrega o documento Word que serve de molde
             doc = Document("Template_Proposta.docx")
             
-            # Gera as datas
-            data_emissao, data_vigencia = gerar_datas()
+            # Gera a data de emissão automática (hoje) e ignora a vigência antiga
+            data_emissao, _ = gerar_datas()
+            
+            # Pega a vigência que o usuário digitou no site
+            data_vigencia = vigencia_input if vigencia_input else "Prazo não informado"
             
             # ==========================================
             # 1. A MÁQUINA DE CALCULAR (Soma e Subtração)
@@ -228,7 +232,7 @@ if st.button("Gerar Proposta"):
             doc.save(arquivo_memoria)
             arquivo_memoria.seek(0)
             
-            st.success("✨ Proposta processada com sucesso!")
+            st.success(" Proposta processada com sucesso!")
             
             # Cria o botão de download para o usuário baixar
             st.download_button(
